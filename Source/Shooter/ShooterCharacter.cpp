@@ -3,38 +3,77 @@
 
 #include "ShooterCharacter.h"
 
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+
 // Sets default values
-AShooterCharacter::AShooterCharacter()
+AShooterCharacter::AShooterCharacter() :
+	BaseTurnRate(45.f),
+	BaseLookUpRate(45.f)
 {
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
+	// Create a camera boom (pulls in towards the character if there is a collision)
+	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
+	CameraBoom->SetupAttachment(RootComponent);
+
+	// The camera follows at this distance behind the character
+	CameraBoom->TargetArmLength = 300.f;
+
+	// Rotate the arm based on the controller
+	CameraBoom->bUsePawnControlRotation = true;
+
+	// Create a follow camera
+	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
+	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
+
+	// Camera does not rotate relative to arm
+	FollowCamera->bUsePawnControlRotation = false;
 }
 
 // Called when the game starts or when spawned
 void AShooterCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+}
 
-	UE_LOG(LogTemp, Warning, TEXT("BeginPlay()"));
+void AShooterCharacter::MoveForward(float Value)
+{
+	if (Controller && (Value != 0))
+	{
+		// Find out which way is forward
+		const FRotator Rotation{ Controller->GetControlRotation() };
+		const FRotator YawRotation{ 0, Rotation.Yaw, 0 };
 
-	int myInt{ 42 };
-	UE_LOG(LogTemp, Warning, TEXT("int myInt: %d"), myInt);
+		const FVector Direction{ FRotationMatrix{YawRotation}.GetUnitAxis(EAxis::X) };
+		AddMovementInput(Direction, Value);
+	}
+}
 
-	float myFloat{ 3.14159f };
-	UE_LOG(LogTemp, Warning, TEXT("float myFloat: %f"), myFloat);
+void AShooterCharacter::MoveRight(float Value)
+{
+	if (Controller && (Value != 0))
+	{
+		// Find out which way is forward
+		const FRotator Rotation{ Controller->GetControlRotation() };
+		const FRotator YawRotation{ 0, Rotation.Yaw, 0 };
 
-	double myDouble{ 0.000080845 };
-	UE_LOG(LogTemp, Warning, TEXT("double myDouble: %.10lf"), myDouble);
+		const FVector Direction{ FRotationMatrix{YawRotation}.GetUnitAxis(EAxis::Y) };
+		AddMovementInput(Direction, Value);
+	}
+}
 
-	char myChar{ 'c' };
-	UE_LOG(LogTemp, Warning, TEXT("char myChar: %c"), myChar);
+void AShooterCharacter::TurnAtRate(float Rate)
+{
+	// Calculate delta for this frame from the rate information
+	AddControllerYawInput(Rate * BaseTurnRate * GetWorld()->GetDeltaSeconds());	// def/sec * sec/frame
+}
 
-	wchar_t myWideChar{ L'J' };
-	UE_LOG(LogTemp, Warning, TEXT("wchar_t myWideChar: %lc"), myWideChar);
-
-	bool myBool{ true };
-	UE_LOG(LogTemp, Warning, TEXT("bool myBool: %d"), myBool);
+void AShooterCharacter::LookUpAtRate(float Rate)
+{
+	AddControllerPitchInput(Rate * BaseLookUpRate * GetWorld()->GetDeltaSeconds());	// def/sec * sec/frame
 }
 
 // Called every frame
@@ -48,6 +87,16 @@ void AShooterCharacter::Tick(float DeltaTime)
 void AShooterCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
+	check(PlayerInputComponent);
 
+	PlayerInputComponent->BindAxis("MoveForward", this, &AShooterCharacter::MoveForward);
+	PlayerInputComponent->BindAxis("MoveRight", this, &AShooterCharacter::MoveRight);
+	PlayerInputComponent->BindAxis("TurnRate", this, &AShooterCharacter::TurnAtRate);
+	PlayerInputComponent->BindAxis("LookUpRate", this, &AShooterCharacter::LookUpAtRate);
+	PlayerInputComponent->BindAxis("Turn", this, &APawn::AddControllerYawInput);
+	PlayerInputComponent->BindAxis("LookUp", this, &APawn::AddControllerPitchInput);
+
+	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
+	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
 }
 
