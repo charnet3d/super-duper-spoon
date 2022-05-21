@@ -8,6 +8,9 @@
 
 class USpringArmComponent;
 class UCameraComponent;
+class USoundCue;
+class UParticleSystem;
+class UAnimMontage;
 
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -40,6 +43,10 @@ protected:
 	 */
 	void LookUpAtRate(float Rate);
 
+	/**
+	 * Called when the Fire button is pressed
+	 */
+	void FireWeapon();
 
 public:	
 	// Called every frame
@@ -62,6 +69,18 @@ private:
 	/* Base look up/down rate, in deg/sec. Other scaling may affect final rate */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = true))
 	float BaseLookUpRate;
+
+	/* Randomized gunshot sound cue*/
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
+	USoundCue* FireSound;
+
+	/* Flash spawned at BarrelSocket */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
+	UParticleSystem* MuzzleFlash;
+
+	/* Montage for firing the weapon */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
+	UAnimMontage* HipFireMontage;
 
 public:
 	/* Returns CameraBoom SubObject */
