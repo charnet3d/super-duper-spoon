@@ -8,6 +8,7 @@
 
 class UBoxComponent;
 class UWidgetComponent;
+class USphereComponent;
 
 UCLASS()
 class SHOOTER_API AItem : public AActor
@@ -26,6 +27,17 @@ public:
 	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
+	/* Called when overlapping AreaSphere */
+	UFUNCTION()
+	void OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep,
+		const FHitResult& SweepResult);
+
+	/* Called when end overlapping AreaSphere */
+	UFUNCTION()
+	void OnSphereEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+
 private:
 
 	/* Skeletal mesh for the item */
@@ -40,6 +52,10 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = true))
 	UWidgetComponent* PickupWidget;
 
-public:
+	/* Enables item tracing when overlapped */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Item Properties", meta = (AllowPrivateAccess = true))
+	USphereComponent* AreaSphere;
 
+public:
+	FORCEINLINE UWidgetComponent* GetPickupWidget() const { return PickupWidget; }
 };
