@@ -4,6 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+
+#include "AmmoType.h"
+
 #include "ShooterCharacter.generated.h"
 
 class USpringArmComponent;
@@ -12,6 +15,18 @@ class USoundCue;
 class UParticleSystem;
 class UAnimMontage;
 class AItem;
+class AWeapon;
+
+
+UENUM(BlueprintType)
+enum class ECombatState : uint8
+{
+	ECS_Unoccupied UMETA(DisplayName = "Unoccupied"),
+	ECS_FireTimerInProgress UMETA(DisplayName = "FireTimerInProgress"),
+	ECS_Reloading UMETA(DisplayName = "Reloading"),
+	
+	ECS_MAX UMETA(DisplayName = "DefaultMax")
+};
 
 UCLASS()
 class SHOOTER_API AShooterCharacter : public ACharacter
@@ -21,6 +36,12 @@ class SHOOTER_API AShooterCharacter : public ACharacter
 public:
 	// Sets default values for this character's properties
 	AShooterCharacter();
+
+	// Called every frame
+	virtual void Tick(float DeltaTime) override;
+
+	// Called to bind functionality to input
+	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -97,13 +118,41 @@ protected:
 
 	void SetItemPickupWidgetVisibility(AItem* Item, bool visibility);
 
-public:	
-	// Called every frame
-	virtual void Tick(float DeltaTime) override;
+	/* Spawns a default weapon and equips it */
+	AWeapon* SpawnDefaultWeapon();
 
-	// Called to bind functionality to input
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+	/* Takes a weapon and attaches it to the mesh */
+	void EquipWeapon(AWeapon* WeaponToEquip);
 
+	/** Detach weapon and let it fall to the ground */
+	void DropWeapon();
+
+	void SelectButtonPressed();
+	void SelectButtonReleased();
+
+	/** Drops currently equipped weapon and equips TraceHitItem */
+	void SwapWeapon(AWeapon* WeaponToSwap);
+
+	/** Initialize the ammo map with ammo values */
+	void InitializeAmmoMap();
+
+	/** Check to make sure this weapon has ammo */
+	bool WeaponHasAmmo();
+
+	/** FireWeapon functions */
+	void PlayFireSound();
+	void SendBullet();
+	void PlayGunFireMontage();
+
+	/** For reloading the weapon */
+	void ReloadButtonPressed();
+	void ReloadWeapon();
+
+	UFUNCTION(BlueprintCallable)
+	void FinishReloading();
+	
+	/** Check to see if we have ammo of the EquippedWeapon's ammo type */
+	bool CarryingAmmo();
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = true))
 	USpringArmComponent* CameraBoom;
@@ -233,6 +282,46 @@ private:
 	/* Number of overlapped AItems */
 	int8 OverlappedItemCount;
 
+	/* Currently equipped weapon */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	AWeapon * EquippedWeapon;
+
+	/* Set this in blueprints for the default weapon class */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	TSubclassOf<AWeapon> DefaultWeaponClass;
+
+	/** Item currently hit by our trace in TraceForItems() (could be null) */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	AItem* TraceHitItem;
+
+	/** Distance outward from the camera for the interp destination */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = true))
+	float CameraInterpDistance;
+
+	/** Distance upward from the camera for the interp destination */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = true))
+	float CameraInterpElevation;
+
+	/** Map to keep track of ammo of the different weapon types */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Items, meta = (AllowPrivateAccess = true))
+	TMap<EAmmoType, int32> AmmoMap;
+
+	/** Staring amount of 9mm ammo */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items, meta = (AllowPrivateAccess = true))
+	int32 Starting9mmAmmo;
+	
+	/** Staring amount of AR ammo */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Items, meta = (AllowPrivateAccess = true))
+	int32 StartingARAmmo;
+
+	/** Combat State can only fire or reload if Unoccupied */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	ECombatState CombatState;
+
+	/* Montage for reloading the weapon */
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
+	UAnimMontage* ReloadMontage;
+	
 public:
 	/* Returns CameraBoom SubObject */
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -249,4 +338,8 @@ public:
 
 	/* Adds/Subtracts to/from OverlappedItemCount and updates bShouldTraceForItems */
 	void IncrementOverlappedItemCount(int8 Amount);
+
+	FVector GetCameraInterpLocation();
+
+	void GetPickupItem(AItem* Item);
 };
