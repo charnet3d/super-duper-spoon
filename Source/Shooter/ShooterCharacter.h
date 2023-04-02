@@ -153,6 +153,14 @@ protected:
 	
 	/** Check to see if we have ammo of the EquippedWeapon's ammo type */
 	bool CarryingAmmo();
+
+	/** Called from Animation Blueprint with GrabClip notify */
+	UFUNCTION(BlueprintCallable)
+	void GrabClip();
+	
+	/** Called from Animation Blueprint with ReleaseClip notify */
+	UFUNCTION(BlueprintCallable)
+	void ReleaseClip();
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = true))
 	USpringArmComponent* CameraBoom;
@@ -321,6 +329,14 @@ private:
 	/* Montage for reloading the weapon */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Combat, meta = (AllowPrivateAccess = true))
 	UAnimMontage* ReloadMontage;
+
+	/* Transform of the clip when we first grab the clip during reloading */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	FTransform ClipTransform;
+
+	/* Scene component to attach to the Character's hand when reloading */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
+	USceneComponent* HandSceneComponent;
 	
 public:
 	/* Returns CameraBoom SubObject */
