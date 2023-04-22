@@ -161,6 +161,9 @@ protected:
 	/** Called from Animation Blueprint with ReleaseClip notify */
 	UFUNCTION(BlueprintCallable)
 	void ReleaseClip();
+
+	void CrouchButtonPressed();
+	
 private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = true))
 	USpringArmComponent* CameraBoom;
@@ -337,7 +340,11 @@ private:
 	/* Scene component to attach to the Character's hand when reloading */
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Combat, meta = (AllowPrivateAccess = true))
 	USceneComponent* HandSceneComponent;
-	
+
+	/** True when crouching */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
+	bool bCrouching;
+
 public:
 	/* Returns CameraBoom SubObject */
 	FORCEINLINE USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
@@ -358,4 +365,8 @@ public:
 	FVector GetCameraInterpLocation();
 
 	void GetPickupItem(AItem* Item);
+
+	FORCEINLINE ECombatState GetCombatState() const { return CombatState; }
+	
+	FORCEINLINE bool IsCrouching() const { return bCrouching; }
 };

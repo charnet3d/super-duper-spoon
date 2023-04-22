@@ -7,6 +7,19 @@
 #include "ShooterAnimInstance.generated.h"
 
 class AShooterCharacter;
+
+
+UENUM(BlueprintType)
+enum class EOffsetState : uint8
+{
+	EOS_Aiming UMETA(DisplayName = "Aiming"),
+	EOS_Hip UMETA(DisplayName = "Hip"),
+	EOS_Reloading UMETA(DisplayName = "Reloading"),
+	EOS_InAir UMETA(DisplayName = "InAir"),
+	
+	EOS_MAX UMETA(DisplayName = "DefaultMax")
+};
+
 /**
  * 
  */
@@ -27,6 +40,9 @@ public:
 protected:
 	/** Handle turning in place variables */
 	void TurnInPlace();
+	
+	/** Handle calculations for leaning while running */
+	void Lean(float DeltaTime);
 private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
@@ -55,11 +71,11 @@ private:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Movement, meta = (AllowPrivateAccess = true))
 	bool bAiming;
 
-	/** Yaw of the character this frame */
-	float CharacterYaw;
+	/** Turn In Place: Yaw of the character this frame; Only updated when standing still and not in the air */
+	float TIPCharacterYaw;
 
-	/** Yaw of the character the previous frame */
-	float CharacterYawLastFrame;
+	/** Turn In Place: Yaw of the character the previous frame; Only updated when standing still and not in the air */
+	float TIPCharacterYawLastFrame;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = true))
 	float RootYawOffset;
@@ -69,4 +85,30 @@ private:
 	
 	/** Rotation curve value last frame */
 	float RotationCurveLastFrame;
+
+	/** The pitch of the aim rotation used for aim offset */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = true))
+	float Pitch;
+
+	/** True when reloading, used to prevent aim offset when reloading */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = true))
+	bool bReloading;
+
+	/** Offset state; used to determine which Aim Offset to use */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Turn In Place", meta = (AllowPrivateAccess = true))
+	EOffsetState OffsetState;
+
+	/** Yaw of the character this frame */
+	FRotator CharacterRotation;
+
+	/** Yaw of the character the previous frame */
+	FRotator CharacterRotationLastFrame;
+
+	/** Yaw delta used for leaning while running in the blendspace */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Lean", meta = (AllowPrivateAccess = true))
+	double YawDelta;
+
+	/** True when crouching */
+	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Crouching", meta = (AllowPrivateAccess = true))
+	bool bCrouching;
 };
