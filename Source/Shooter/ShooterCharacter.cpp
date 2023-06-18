@@ -723,6 +723,9 @@ void AShooterCharacter::SetItemPickupWidgetVisibility(AItem* Item, bool visibili
 	if (Item && Item->GetPickupWidget())
 	{
 		Item->GetPickupWidget()->SetVisibility(visibility);
+		visibility ? 
+			Item->EnableCustomDepth() :
+			Item->DisableCustomDepth();
 	}
 }
 
@@ -750,6 +753,9 @@ void AShooterCharacter::EquipWeapon(AWeapon* WeaponToEquip)
 
 		EquippedWeapon = WeaponToEquip;
 		EquippedWeapon->SetItemState(EItemState::EIS_Equipped);
+		
+		EquippedWeapon->DisableGlowMaterial();
+		EquippedWeapon->DisableCustomDepth();
 	}
 }
 

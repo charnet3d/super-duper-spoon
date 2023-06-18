@@ -43,12 +43,14 @@ void AWeapon::ThrowWeapon()
 
 	float RandomRotation{ 30.f };
 	ImpulseDirection = ImpulseDirection.RotateAngleAxis(RandomRotation, FVector(0.f, 0.f, 1.f));
-	ImpulseDirection *= 20000.f;
+	ImpulseDirection *= 2000.f;
 	GetItemMesh()->AddImpulse(ImpulseDirection);
 
 	bFalling = true;
 	GetWorldTimerManager().SetTimer(ThrowWeaponTimer, this,
 									&AWeapon::StopFalling, ThrowWeaponTime);
+
+	EnableGlowMaterial();
 }
 
 void AWeapon::DecrementAmmo()
@@ -74,4 +76,5 @@ void AWeapon::StopFalling()
 {
 	bFalling = false;
 	SetItemState(EItemState::EIS_Pickup);
+	StartPulseTimer();
 }
