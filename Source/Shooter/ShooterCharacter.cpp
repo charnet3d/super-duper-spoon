@@ -147,7 +147,7 @@ void AShooterCharacter::BeginPlay()
 		CameraDefaultFOV = FollowCamera->FieldOfView;
 		CameraCurrentFOV = CameraDefaultFOV;
 	}
-	
+
 	// Spawn the default weapon and equip it
 	EquipWeapon(SpawnDefaultWeapon());
 
